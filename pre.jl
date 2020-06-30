@@ -3,11 +3,11 @@ using Printf
 function main()
     xy_or_r = 2          # 1:x,y 2:r,t
     xnum = 200           #       2:rnum
-    ynum = 100           #       2:tnum
-    lenx = 1.0           #       2:inr
-    leny = 2.0           #       2:outr
-    st_ang  = pi/2       # 2:angle
-    en_ang  = 0          # 2:angle
+    ynum = 200           #       2:tnum
+    lenx = 0.5           #       2:inr
+    leny = 1.5           #       2:outr
+    st_ang  = -1/2*pi       # 2:angle
+    en_ang  = -3/2*pi          # 2:angle
 
     outdir = "grid"
     make_dir(outdir)

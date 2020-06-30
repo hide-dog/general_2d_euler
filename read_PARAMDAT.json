@@ -6,24 +6,24 @@
 
 
 "Restart":"test",         
-"restartnum":"5000000",     
+"restartnum":"999",     
 "in_ext":".dat",
 
 
-"every_outnum":"5.0e3",      
+"every_outnum":"10000",      
 "init_small":"1.0e-6",     
 "norm_ok":"1.0e-4",     
 "norm_check_num":"100", 
 
 
-"nt":"5.0e5",          
-"dt":"1.0e-8",       
+"nt":"1.0e5",          
+"dt":"1.0e-7",       
 
 
-"init_rho":"1.0",     
-"init_u":"1.0",       
+"init_rho":"6.0e-5",     
+"init_u":"3000",       
 "init_v":"0.0",       
-"init_p":"1.0",       
+"init_p":"0.349",       
 
 "specific_heat_ratio":"1.4", 
 
@@ -35,19 +35,19 @@
 
 
 
-"bd1_con":"0",
+"bd1_con":"1",
 "bd1_rho":"1.0",
-"bd1_u":"300.0",
+"bd1_u":"0.0",
 "bd1_v":"0.0",
 "bd1_p":"1.0",
 "bd1_T":"300.0",
 
-"bd2_con":"2",
-"bd2_rho":"0.0",
-"bd2_u":"0.0",
+"bd2_con":"0",
+"bd2_rho":"6.0e-6",
+"bd2_u":"6699.0",
 "bd2_v":"0.0",
-"bd2_p":"0.0",
-"bd2_T":"300.0",
+"bd2_p":"0.349",   
+"bd2_T":"203.1",
 
 "bd3_con":"1",
 "bd3_rho":"0.0",

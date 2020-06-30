@@ -17,8 +17,13 @@ function write_file(outdir,inresult_dir,front,back)
 
     elements = read_elements(1)
 
-    inf=readdir(inresult_dir)
-    T = zeros(nodes_xmax-3,nodes_ymax-3)
+    inf = readdir(inresult_dir)
+    cellnum = (nodes_xmax-3)*(nodes_ymax-3)
+    rho = zeros(cellnum)
+    u = zeros(cellnum)
+    v = zeros(cellnum)
+    p = zeros(cellnum)
+    T = zeros(cellnum)
     
     for i in 1:length(inf)
         if occursin(".dat", inf[i]) == true
@@ -28,17 +33,26 @@ function write_file(outdir,inresult_dir,front,back)
             end 
             fff=split(fff,"\n",keepempty=false)
 
-            for i in 2:length(fff)
-                fff[i]=replace(fff[i]," \r" => "")
-                #temp = split(fff[2]," ")
-                T[i-1] = parse(Float64,fff[i])
+            for j in 2:length(fff)
+                fff[j]=replace(fff[j]," \r" => "")
+                temp = split(fff[j]," ")
+                rho[j-1] = parse(Float64,temp[1])
+                u[j-1] = parse(Float64,temp[2])
+                v[j-1] = parse(Float64,temp[3])
+                p[j-1] = parse(Float64,temp[4])
+                T[j-1] = parse(Float64,temp[5])
             end
             dname = replace(inf[i],".dat" => "")
             out_file = replace(inf[i],".dat" => ".vtk")
             
             write_points(nodes,out_file,outdir,dname,front,back)
             write_cells(elements,out_file,outdir)
-            write_result(T,out_file,outdir)
+            write_result(rho,out_file,outdir,1)
+            write_result(u,out_file,outdir,2)
+            write_result(v,out_file,outdir,3)
+            write_result(p,out_file,outdir,4)
+            write_result(T,out_file,outdir,5)
+            print("fin writing "*out_file)
         end
     end
 end 
@@ -162,26 +176,27 @@ function write_cells(elements,out_file,outdir)
     println("fin writing cells")
 end
 
-function write_result(T,out_file,outdir)
-    a = length(T)
-    a_st = @sprintf("%1.0f", a)
+function write_result(val,out_file,outdir,k)
+    dtype = ["rho","u","v","p","T"]
 
-    dtype = "cell_scalars"
+    a = length(val)
+    a_st = @sprintf("%1.0f", a)
     
     temp1 = "CELL_DATA "*a_st*"\n"
-    temp2 = "SCALARS "*dtype*" float\nLOOKUP_TABLE default\n"
+    temp2 = "SCALARS "*dtype[k]*" float\nLOOKUP_TABLE default\n"
 
     fff = outdir*"/"*out_file
     open(fff,"a") do f
-        write(f, temp1)
+        if k == 1
+            write(f, temp1)
+        end
         write(f, temp2)
         for i in 1:a
-            data = @sprintf("%7.7f", T[i])
+            data = @sprintf("%7.7f", val[i])
             write(f, data)
             write(f, "\n")
         end
     end 
-    print("fin writing "*out_file)
 end
 # main
 main()

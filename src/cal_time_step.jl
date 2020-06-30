@@ -1,9 +1,10 @@
-function time_integration_explicit(dt,Qval_hat,RHS)
-    new_Qval_hat=zeros(size(Qval_hat)[1],size(Qval_hat)[2])
-    for i in 1:size(Qval_hat)[1]
-        for j in 1:size(Qval_hat)[2]
-            new_Qval_hat[i,j]=Qval_hat[i,j]+dt*RHS[i,j]
+function time_integration_explicit(dt,Qcon_hat,RHS,cellxmax,cellymax)
+    Threads.@threads for i in 2:cellxmax-1
+        for j in 2:cellymax-1
+            for k in 1:4
+                Qcon_hat[i,j,k] = Qcon_hat[i,j,k]+dt*RHS[i,j,k]
+            end
         end
     end
-    return new_Qval_hat
+    return Qcon_hat
 end 
