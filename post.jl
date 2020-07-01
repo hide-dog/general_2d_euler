@@ -27,6 +27,8 @@ function write_file(outdir,inresult_dir,front,back)
     
     for i in 1:length(inf)
         if occursin(".dat", inf[i]) == true
+            print("start writing "*out_file*"\n")
+            
             fff=[]
             open(inresult_dir*"/"*inf[i], "r") do f
                 fff=read(f,String)
@@ -52,7 +54,7 @@ function write_file(outdir,inresult_dir,front,back)
             write_result(v,out_file,outdir,3)
             write_result(p,out_file,outdir,4)
             write_result(T,out_file,outdir,5)
-            print("fin writing "*out_file)
+            print("fin writing "*out_file*"\n")
         end
     end
 end 

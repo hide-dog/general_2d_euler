@@ -44,14 +44,14 @@ function read_nodes(skipnum,xmax,ymax)
         fff[i]=replace(fff[i]," \r" => "")
     end
 
-    nodes=zeros(xmax,ymax,2)
+    nodes = zeros(xmax,ymax,2)
     for i in 1:num_nodes
         temp=split(fff[i+skipnum]," ")
 
-        x = parse(Int64,temp[1])
-        y = parse(Int64,temp[2])
-        nodes[x,y,1]=parse(Float64,temp[3])
-        nodes[x,y,2]=parse(Float64,temp[4]) 
+        xnum = parse(Int64,temp[1])
+        ynum = parse(Int64,temp[2])
+        nodes[xnum,ynum,1]=parse(Float64,temp[3])
+        nodes[xnum,ynum,2]=parse(Float64,temp[4]) 
     end
     return nodes
 end 

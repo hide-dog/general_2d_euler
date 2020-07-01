@@ -20,26 +20,22 @@ function main()
 
         Qbase = set_boundary(Qbase,cellxmax,cellymax,vecAx,vecAy,bdcon)
         Qcon = base_to_conservative(Qbase,cellxmax,cellymax,specific_heat_ratio)
+
         Qcon_hat = setup_Qcon_hat(Qcon,cellxmax,cellymax,volume)
 
+        #println(Qbase[:,1,1])
 
         cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
 
-        #println(cell_E_hat_plas[50,:])
-        #println(cell_E_hat_plas[51,:])
-
         E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
-        
-        #println(E_hat[50,:])
-        #println(E_hat[51,:])
-        #println(F_hat[:])
         
         RHS = setup_RHS(cellxmax,cellymax,E_hat,F_hat)
 
-        #println(RHS[50,:])
-        #println(RHS[51,:])
-        
+        #println(RHS[:,2,1])
+                
         Qcon_hat = time_integration_explicit(dt,Qcon_hat,RHS,cellxmax,cellymax)
+
+        #println(Qcon_hat[:,2,1])
         
         #println(Qcon)
         Qcon = Qhat_to_Q(Qcon_hat,cellxmax,cellymax,volume)
@@ -61,6 +57,10 @@ function main()
 
         if Qcon[2,2,4] < 0
             println("pressure are minus !!")
+            break
+        end
+        if Qcon[2,2,1] == NaN
+            println(" NaN !!")
             break
         end
 

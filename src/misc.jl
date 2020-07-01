@@ -48,12 +48,14 @@ function setup_restart_value(cellxmax,cellymax,out_dir,restart_file)
         fff[i]=replace(fff[i]," \r" => "")
     end
     
+    k=1
     for i in 2:cellxmax-1
         for j in 2:cellymax-1
-            temp = split(fff[i+skipnum]," ")
+            temp = split(fff[k+skipnum]," ")
             for k in 1:4
                 Qbase[i,j,k]=parse(Float64,temp[k]) 
             end
+            k = k+1
         end
     end
     return Qbase

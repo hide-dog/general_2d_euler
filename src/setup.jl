@@ -174,7 +174,7 @@ function setup_Qcon_hat(Qcon,cellxmax,cellymax,volume)
     Threads.@threads for i in 1:cellxmax
         for j in 1:cellymax
             for k in 1:4
-                Qcon_hat[i,j,4] = Qcon[i,j,4]*volume[i,j]
+                Qcon_hat[i,j,k] = Qcon[i,j,k]*volume[i,j]
             end
         end
     end
@@ -186,7 +186,7 @@ function Qhat_to_Q(Qcon_hat,cellxmax,cellymax,volume)
     Threads.@threads for i in 1:cellxmax
         for j in 1:cellymax
             for k in 1:4
-                Qcon[i,j,4] = Qcon_hat[i,j,4]/volume[i,j]
+                Qcon[i,j,k] = Qcon_hat[i,j,k]/volume[i,j]
             end
         end
     end

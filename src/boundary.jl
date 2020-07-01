@@ -10,19 +10,19 @@ function set_boundary(Qbase,cellxmax,cellymax,vecAx,vecAy,bdcon)
     """
 
     # bd1 = x-
-    if bdcon[1,1] == 0
+    if Int(bdcon[1][1]) == 0
         for j in 1:cellymax
             for k in 1:4
-                Qbase[1,j,k] = bdcon[1,k+1]
+                Qbase[1,j,k] = bdcon[1][k+1]
             end
         end
-    elseif bdcon[1,1] == 1
+    elseif Int(bdcon[1][1]) == 1
         for j in 1:cellymax
             for k in 1:4
                 Qbase[1,j,k] = Qbase[2,j,k]
             end
         end
-    elseif bdcon[1,1] == 2
+    elseif Int(bdcon[1][1]) == 2
         for j in 1:cellymax
             xvec = vecAx[2,j,1]
             yvec = vecAx[2,j,2]
@@ -37,19 +37,19 @@ function set_boundary(Qbase,cellxmax,cellymax,vecAx,vecAy,bdcon)
     end
 
     # bd2 = x+
-    if bdcon[2,1] == 0
+    if Int(bdcon[2][1]) == 0
         for j in 1:cellymax
             for k in 1:4
-                Qbase[cellxmax,j,k] = bdcon[2,k+1]
+                Qbase[cellxmax,j,k] = bdcon[2][k+1]
             end
         end
-    elseif bdcon[2,1] == 1
+    elseif Int(bdcon[2][1]) == 1
         for j in 1:cellymax
             for k in 1:4
                 Qbase[cellxmax,j,k] = Qbase[cellxmax-1,j,k]
             end
         end
-    elseif bdcon[2,1] == 2
+    elseif Int(bdcon[2][1]) == 2
         for j in 1:cellymax
             xvec = vecAx[cellymax+1,j,1]
             yvec = vecAx[cellymax+1,j,2]
@@ -64,19 +64,19 @@ function set_boundary(Qbase,cellxmax,cellymax,vecAx,vecAy,bdcon)
     end
 
     # bd3 = y-
-    if bdcon[3,1] == 0
+    if Int(bdcon[3][1]) == 0
         for i in 1:cellxmax
             for k in 1:4
-                Qbase[i,1,k] = bdcon[3,k+1]
+                Qbase[i,1,k] = bdcon[3][k+1]
             end
         end
-    elseif bdcon[3,1] == 1
+    elseif Int(bdcon[3][1]) == 1
         for i in 1:cellxmax
             for k in 1:4
                 Qbase[i,1,k] = Qbase[i,2,k]
             end
         end
-    elseif bdcon[3,1] == 2
+    elseif Int(bdcon[3][1]) == 2
         for i in 1:cellxmax
             xvec = vecAx[i,2,1]
             yvec = vecAx[i,2,2]
@@ -91,22 +91,22 @@ function set_boundary(Qbase,cellxmax,cellymax,vecAx,vecAy,bdcon)
     end
 
     # bd4 = y+
-    if bdcon[4,1] == 0
+    if Int(bdcon[4][1]) == 0
         for i in 1:cellxmax
             for k in 1:4
-                Qbase[i,cellymax,k] = bdcon[4,k+1]
+                Qbase[i,cellymax,k] = bdcon[4][k+1]
             end
         end
-    elseif bdcon[4,1] == 1
+    elseif Int(bdcon[4][1]) == 1
         for i in 1:cellxmax
             for k in 1:4
                 Qbase[i,cellymax,k] = Qbase[i,cellxmax-1,k]
             end
         end
-    elseif bdcon[4,1] == 2
+    elseif Int(bdcon[4][1]) == 2
         for i in 1:cellxmax
-            xvec = vecAx[i,cellymax+1,1]
-            yvec = vecAx[i,cellymax+1,2]
+            xvec = vecAx[i,cellymax,1]
+            yvec = vecAx[i,cellymax,2]
             u = Qbase[i,cellymax-1,2]
             v = Qbase[i,cellymax-1,3]
 
