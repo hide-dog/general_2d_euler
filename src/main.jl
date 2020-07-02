@@ -31,22 +31,25 @@ function main()
         E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
         
         RHS = setup_RHS(cellxmax,cellymax,E_hat,F_hat)
-
-        #println(RHS[:,2,1])
-                
+        
+        # implicit scheme
+        #= A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig = one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,volume)
+        nt_lusgs = Int(1.0*10^(5))
+        for i in 1:nt_lusgs
+            Qcon_hat,Lx,Ly,Ux,Uy = lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig,jalphaP, jbetaP,RHS,cellxmax,cellymax,volume)
+            res = set_res(Qcon_hat,Lx,Ly,Ux,Uy,RHS,cellxmax,cellymax)
+            norm2 = check_converge(res,RHS,cellxmax,cellymax)
+            if norm2 < norm_ok
+                break
+            end 
+        end
+        =#
+        
+        # exlicit scheme
         Qcon_hat = time_integration_explicit(dt,Qcon_hat,RHS,cellxmax,cellymax)
 
-        #println(Qcon_hat[:,2,1])
         
-        #println(Qcon)
         Qcon = Qhat_to_Q(Qcon_hat,cellxmax,cellymax,volume)
-
-        #println(vecE_hat)
-        #println(vecF_hat)
-        #println(Qcon)
-        
-        #throw(UndefVarError(:x))
-
         Qbase = conservative_to_base(Qcon,cellxmax,cellymax,specific_heat_ratio)
 
         evalnum=k+restart_num

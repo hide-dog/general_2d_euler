@@ -8,6 +8,8 @@ src_read="read_para.jl"
 include(src_path*src_read)
 src_read="cal_time_step.jl"
 include(src_path*src_read)
+src_read="converge.jl"
+include(src_path*src_read)
 src_read="output.jl"
 include(src_path*src_read)
 src_read="setup.jl"
