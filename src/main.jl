@@ -23,7 +23,8 @@ function main()
 
         Qcon_hat = setup_Qcon_hat(Qcon,cellxmax,cellymax,volume)
 
-        #println(Qbase[:,1,1])
+        #println(Qbase[:,1,2])
+        #println(Qbase[:,1,3])
 
         cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
 

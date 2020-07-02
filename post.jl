@@ -27,8 +27,10 @@ function write_file(outdir,inresult_dir,front,back)
     
     for i in 1:length(inf)
         if occursin(".dat", inf[i]) == true
+            dname = replace(inf[i],".dat" => "")
+            out_file = replace(inf[i],".dat" => ".vtk")
             print("start writing "*out_file*"\n")
-            
+
             fff=[]
             open(inresult_dir*"/"*inf[i], "r") do f
                 fff=read(f,String)
@@ -44,8 +46,6 @@ function write_file(outdir,inresult_dir,front,back)
                 p[j-1] = parse(Float64,temp[4])
                 T[j-1] = parse(Float64,temp[5])
             end
-            dname = replace(inf[i],".dat" => "")
-            out_file = replace(inf[i],".dat" => ".vtk")
             
             write_points(nodes,out_file,outdir,dname,front,back)
             write_cells(elements,out_file,outdir)

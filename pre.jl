@@ -1,7 +1,7 @@
 using Printf
 
 function main()
-    xy_or_r = 1          # 1:x,y 2:r,t
+    xy_or_r = 2          # 1:x,y 2:r,t
     xnum = 100           #       2:rnum
     ynum = 200           #       2:tnum
     lenx = 0.5           #       2:inr
