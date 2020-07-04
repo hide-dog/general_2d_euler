@@ -18,16 +18,17 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
     A_beta_shig = zeros(cellxmax,cellymax)
     B_beta_shig = zeros(cellxmax,cellymax)
     beta = 1.1
-    for i in 2:cellxmax
-        for j in 2:cellymax
+
+    for i in 1:cellxmax
+        for j in 1:cellymax
             for k in 1:2 #A,B
                 jacob_temp = zeros(4,4)
                 if k == 1
                     kx_av = 0.5*(vecAx[i,j,1]+vecAx[i+1,j,1])/volume[i,j]
                     ky_av = 0.5*(vecAx[i,j,2]+vecAx[i+1,j,2])/volume[i,j]
-                elseif k ==2
-                    kx_av = 0.5*(vecAy[i,j,1]+vecAy[i+1,j,1])/volume[i,j]
-                    ky_av = 0.5*(vecAy[i,j,2]+vecAy[i+1,j,2])/volume[i,j]
+                elseif k == 2
+                    kx_av = 0.5*(vecAy[i,j,1]+vecAy[i,j+1,1])/volume[i,j]
+                    ky_av = 0.5*(vecAy[i,j,2]+vecAy[i,j+1,2])/volume[i,j]
                 end
 
                 rho = Qbase[i,j,1]
@@ -44,8 +45,8 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
                 gebyrho = g*e/rho
 
                 jacob_temp[1,1] = 0.0
-                jacob_temp[1,2] = kx
-                jacob_temp[1,3] = ky
+                jacob_temp[1,2] = kx_av
+                jacob_temp[1,3] = ky_av
                 jacob_temp[1,4] = 0.0
             
                 jacob_temp[2,1] = -u*Z + kx_av*b1c2
@@ -64,7 +65,7 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
                 jacob_temp[4,4] = g*Z
 
                 c = (g*rho/p)^0.5
-                shigma = abs(Z) + c(kx_av^2+ky_av^2)^0.5
+                shigma = abs(Z) + c*(kx_av^2+ky_av^2)^0.5
 
                 I_temp = zeros(4,4)
                 for l in 1:4
@@ -116,8 +117,8 @@ function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A
             D[i,j] = volume[i,j] + dt*(A_beta_shig[i,j] + B_beta_shig[i,j])
             for l in 1:4
                 for m in 1:4
-                    Lx[i-1,j,l,m] = dt*(A_adv_hat_p[i-1,j,k])
-                    Ly[i,j-1,l,m] = dt*(B_adv_hat_p[i,j-1,k])
+                    Lx[i-1,j,l,m] = dt*(A_adv_hat_p[i-1,j,l,m])
+                    Ly[i,j-1,l,m] = dt*(B_adv_hat_p[i,j-1,l,m])
                 end
             end
 
@@ -128,7 +129,7 @@ function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A
             end
 
             for l in 1:4
-                Qcon_hat_temp[i,j,l] = D[i,j]^(-1) * (dt*RHS[i,j,l]-LdQ)
+                Qcon_hat_temp[i,j,l] = D[i,j]^(-1) * (dt*RHS[i,j,l]-LdQ[l])
             end
         end
     end
@@ -140,8 +141,8 @@ function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A
             #D[i,j] = volume[i,j] + dt*(A_beta_shig[i,j]+2*jalphaP[i,j] + B_beta_shig[i,j]+2*jbetaP[i,j])
             for l in 1:4
                 for m in 1:4
-                    Ux[i+1,j,l,m] = dt*(A_adv_hat_m[i+1,j,k])
-                    Uy[i,j+1,l,m] = dt*(B_adv_hat_m[i,j+1,k])
+                    Ux[i+1,j,l,m] = dt*(A_adv_hat_m[i+1,j,l,m])
+                    Uy[i,j+1,l,m] = dt*(B_adv_hat_m[i,j+1,l,m])
                 end
             end
 

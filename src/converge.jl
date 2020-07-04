@@ -1,8 +1,8 @@
 function set_res(Qcon_hat,Lx,Ly,Ux,Uy,RHS,cellxmax,cellymax)
     res = zeros(cellxmax, cellymax,4)
     
-    for i in 2:cellxmax
-        for j in 2:cellymax
+    for i in 2:cellxmax-1
+        for j in 2:cellymax-1
             Ax_star = zeros(4)
                 for l in 1:4
                     for m in 1:4
@@ -18,7 +18,7 @@ function set_res(Qcon_hat,Lx,Ly,Ux,Uy,RHS,cellxmax,cellymax)
     return res
 end
 
-function check_converge(res,RHS,cellxmax,cellymax)
+function check_converge(res,RHS,cellxmax,cellymax,init_small)
     norm2 = zeros(4)
 
     tempAxb = zeros(4)
@@ -33,7 +33,7 @@ function check_converge(res,RHS,cellxmax,cellymax)
     end
 
     for l in 1:4
-        norm2[l] = (tempAxb[l]/tempb[l])^0.5
+        norm2[l] = (tempAxb[l]/(tempb[l]+init_small)) ^ 0.5
     end
     return norm2
 end

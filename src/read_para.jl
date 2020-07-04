@@ -29,6 +29,12 @@ function read_para(dict)
     Restart_file=dict["Restart"]*restartnum*dict["in_ext"]
     restartnum=Int(parse(Float64,restartnum))
 
+    time_integ = dict["time_integ"]
+    
+    init_small　=　parse(Float64,dict["init_small"])
+    norm_ok　=　parse(Float64,dict["norm_ok"])
+    nt_lusgs = Int(parse(Float64,dict["nt_lusgs"]))
+    
     nt=Int(parse(Float64,dict["nt"]))                    # 時間ステップ数
     dt=parse(Float64,dict["dt"])                    # 時間刻み幅
     
@@ -69,13 +75,13 @@ function read_para(dict)
     out_file_front=dict["out_file_front"]
     out_ext=dict["out_ext"]
 
-    return nt,dt,init_rho,init_u,init_v,init_p,specific_heat_ratio,bdcon,every_outnum,out_file_front,out_ext,Restart_file,restartnum
+    return nt,dt,init_rho,init_u,init_v,init_p,specific_heat_ratio,bdcon,every_outnum,out_file_front,out_ext,Restart_file,restartnum,time_integ,init_small,norm_ok,nt_lusgs
 end
 
 function input_para(PARAMDAT)
    read_PARAMDAT=make_json(PARAMDAT)
    dict=read_json(read_PARAMDAT)
-   nt,dt,init_rho,init_u,init_v,init_p,specific_heat_ratio,bdcon,every_outnum,out_file_front,out_ext,Restart_file,restartnum=read_para(dict)
+   nt,dt,init_rho,init_u,init_v,init_p,specific_heat_ratio,bdcon,every_outnum,out_file_front,out_ext,Restart_file,restartnum,time_integ,init_small,norm_ok,nt_lusgs = read_para(dict)
    println("fin read para")
-   return nt,dt,init_rho,init_u,init_v,init_p,specific_heat_ratio,bdcon,every_outnum,out_file_front,out_ext,Restart_file,restartnum
+   return nt,dt,init_rho,init_u,init_v,init_p,specific_heat_ratio,bdcon,every_outnum,out_file_front,out_ext,Restart_file,restartnum,time_integ,init_small,norm_ok,nt_lusgs
 end
