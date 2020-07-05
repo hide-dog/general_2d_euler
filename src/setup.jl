@@ -44,8 +44,9 @@ function setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,ve
             c=0
             try c=(r*Qbase[i,j,4]/Qbase[i,j,1])^0.5
             catch
-                println("\n"*string(i)*","*string(j)*"Qbase pressure=minus")
+                println("\n"*string(i)*","*string(j)*" Qbase error")
                 println(Qbase[i,j,:])
+                println("\n")
                 throw(UndefVarError(:x))
             end
 

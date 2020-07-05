@@ -53,7 +53,7 @@ function main()
         =#
         
         evalnum = k+restartnum
-        
+
         if time_integ == "1"
             # exlicit scheme
             Qcon_hat = time_integration_explicit(dt,Qcon_hat,RHS,cellxmax,cellymax)
@@ -67,6 +67,8 @@ function main()
             println("nt : "*string(round(evalnum)))
             println("density res:"*string(norm2[1]) * "  energy res:"*string(norm2[4]))
             println("\n ---------------------------------- \n")
+
+            #println(Qcon_hat[:,:,1])
         else
             println(time_integ)
             println("pressure check time_integ")

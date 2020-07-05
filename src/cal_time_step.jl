@@ -15,8 +15,8 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
     A_adv_hat_m = zeros(cellxmax,cellymax,4,4)
     B_adv_hat_p = zeros(cellxmax,cellymax,4,4)
     B_adv_hat_m = zeros(cellxmax,cellymax,4,4)
-    A_beta_shig = zeros(cellxmax,cellymax)
-    B_beta_shig = zeros(cellxmax,cellymax)
+    A_beta_sig = zeros(cellxmax,cellymax)
+    B_beta_sig = zeros(cellxmax,cellymax)
     beta = 1.1
 
     for i in 1:cellxmax
@@ -65,11 +65,11 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
                 jacob_temp[4,4] = g*Z
 
                 c = (g*rho/p)^0.5
-                shigma = abs(Z) + c*(kx_av^2+ky_av^2)^0.5
+                sigma = abs(Z) + c*(kx_av^2+ky_av^2)^0.5
 
                 I_temp = zeros(4,4)
                 for l in 1:4
-                    I_temp[l,l] = beta * shigma
+                    I_temp[l,l] = beta * sigma
                 end
 
                 if k == 1
@@ -79,7 +79,7 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
                             A_adv_hat_m[i,j,l,m] = 0.5*(jacob_temp[l,m] - I_temp[l,m])
                         end
                     end
-                    A_beta_shig[i,j] = beta * shigma
+                    A_beta_sig[i,j] = beta * sigma
                 elseif k ==2
                     for l in 1:4
                         for m in 1:4
@@ -87,18 +87,18 @@ function one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,v
                             B_adv_hat_m[i,j,l,m] = 0.5*(jacob_temp[l,m] - I_temp[l,m])
                         end
                     end
-                    B_beta_shig[i,j] = beta * shigma
+                    B_beta_sig[i,j] = beta * sigma
                 end
 
             end
         end
     end
 
-    return A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig
+    return A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_sig, B_beta_sig
 end
 
-function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig,RHS,cellxmax,cellymax,volume)
-    Qcon_hat_temp = copy(Qcon_hat)
+function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_sig, B_beta_sig,RHS,cellxmax,cellymax,volume)
+    Qcon_hat_temp = zeros(cellxmax,cellymax,4)
     D = zeros(cellxmax,cellymax)
     Lx = zeros(cellxmax,cellymax,4,4)
     Ly = zeros(cellxmax,cellymax,4,4)
@@ -109,12 +109,21 @@ function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A
     for i in 1:4
         I[i,i] = 1.0
     end
-    
+
+    # set diagonal
+    for i in 2:cellxmax-1
+        for j in 2:cellymax-1
+            D[i,j] = volume[i,j] + dt*(A_beta_sig[i,j] + B_beta_sig[i,j])
+            #D[i,j] = volume[i,j] + dt*(A_beta_sig[i,j]+2*jalphaP[i,j] + B_beta_sig[i,j]+2*jbetaP[i,j])
+        end
+    end
+
+    #println(D)
+
     # lower sweep
     LdQ = zeros(4)
     for i in 2:cellxmax-1
         for j in 2:cellymax-1
-            D[i,j] = volume[i,j] + dt*(A_beta_shig[i,j] + B_beta_shig[i,j])
             for l in 1:4
                 for m in 1:4
                     Lx[i-1,j,l,m] = dt*(A_adv_hat_p[i-1,j,l,m])
@@ -129,16 +138,17 @@ function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A
             end
 
             for l in 1:4
-                Qcon_hat_temp[i,j,l] = D[i,j]^(-1) * (dt*RHS[i,j,l]-LdQ[l])
+                Qcon_hat_temp[i,j,l] = D[i,j]^(-1) * (dt*RHS[i,j,l]+LdQ[l])
             end
         end
     end
+
+    #println(Qcon_hat_temp)
 
     # upepr sweep
     UdQ = zeros(4)
     for i in 2:cellxmax-1
         for j in 2:cellymax-1
-            #D[i,j] = volume[i,j] + dt*(A_beta_shig[i,j]+2*jalphaP[i,j] + B_beta_shig[i,j]+2*jbetaP[i,j])
             for l in 1:4
                 for m in 1:4
                     Ux[i+1,j,l,m] = dt*(A_adv_hat_m[i+1,j,l,m])
@@ -157,6 +167,8 @@ function lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A
             end
         end
     end
+
+    #println(Qcon_hat)
 
     return Qcon_hat,Lx,Ly,Ux,Uy
 end
