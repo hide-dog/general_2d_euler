@@ -8,7 +8,6 @@ function set_boundary(Qbase,cellxmax,cellymax,vecAx,vecAy,bdcon)
                 "bd1_p":"1.0",
                 "bd1_T":"300.0",
     """
-
     # bd1 = x-
     if Int(bdcon[1][1]) == 0
         for j in 1:cellymax

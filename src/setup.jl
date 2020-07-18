@@ -13,7 +13,31 @@ function set_volume(nodes,cellxmax,cellymax)
     return volume
 end 
 
-function setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
+function setup_cell_flux_hat(Qcon,cellxmax,cellymax,cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus)    
+    cell_E_hat_plas  = zeros(cellxmax,cellymax,4)
+    cell_E_hat_minus = zeros(cellxmax,cellymax,4)
+    cell_F_hat_plas  = zeros(cellxmax,cellymax,4)
+    cell_F_hat_minus = zeros(cellxmax,cellymax,4)
+
+    for i in 1:cellxmax
+        for j in 1:cellymax
+            for l in 1:4
+                for m in 1:4
+                    # Ehat = Ahat * Qhat = Ahat * Q/J = 1/J*Ahat * Q
+                    # 1/J*Ahatの計算をvecAを使ったため，ここではQconを掛けてる
+                    cell_E_hat_plas[i,j,l]  += cell_Ahat_plas[i,j,l,m]*Qcon[i,j,m]
+                    cell_E_hat_minus[i,j,l] += cell_Ahat_minus[i,j,l,m]*Qcon[i,j,m]
+                    cell_F_hat_plas[i,j,l]  += cell_Bhat_plas[i,j,l,m]*Qcon[i,j,m]
+                    cell_F_hat_minus[i,j,l] += cell_Bhat_minus[i,j,l,m]*Qcon[i,j,m]
+                end
+            end
+        end
+    end
+
+    return cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus
+end
+
+function cal_jacobi(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
     """
     Qbase=[rho,u,v,p]
     Qcon=[rho,rhou,rhov,e]
@@ -32,10 +56,11 @@ function setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,ve
 
     A = Rleft * Lambda * Rright
     """
-    cell_E_hat_plas  = zeros(cellxmax,cellymax,4)
-    cell_E_hat_minus = zeros(cellxmax,cellymax,4)
-    cell_F_hat_plas  = zeros(cellxmax,cellymax,4)
-    cell_F_hat_minus = zeros(cellxmax,cellymax,4)
+
+    cell_Ahat_plas  = zeros(cellxmax,cellymax,4,4)
+    cell_Ahat_minus = zeros(cellxmax,cellymax,4,4)
+    cell_Bhat_plas  = zeros(cellxmax,cellymax,4,4)
+    cell_Bhat_minus = zeros(cellxmax,cellymax,4,4)
     r=specific_heat_ratio
 
     for i in 1:cellxmax
@@ -64,8 +89,8 @@ function setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,ve
 
             for l in 1:4
                 for m in 1:4
-                    cell_E_hat_plas[i,j,l]  += A_plas[l,m]*Qcon[i,j,m]
-                    cell_E_hat_minus[i,j,l] += A_minus[l,m]*Qcon[i,j,m]
+                    cell_Ahat_plas[i,j,l,m]  = A_plas[l,m]
+                    cell_Ahat_minus[i,j,l,m] = A_minus[l,m]
                 end
             end
 
@@ -77,13 +102,14 @@ function setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,ve
 
             for l in 1:4
                 for m in 1:4
-                    cell_F_hat_plas[i,j,l]  += A_plas[l,m]*Qcon[i,j,m]
-                    cell_F_hat_minus[i,j,l] += A_minus[l,m]*Qcon[i,j,m]
+                    cell_Bhat_plas[i,j,l,m]  = A_plas[l,m]
+                    cell_Bhat_minus[i,j,l,m] = A_minus[l,m]
                 end
             end
         end
     end
-    return cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus
+
+    return cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus
 end
 
 
@@ -136,7 +162,7 @@ function nn_inner_product(a,b)
 end
 
 
-function FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
+function FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,cellxmax,cellymax)
     E_hat = zeros(cellxmax+1,cellymax,4)
     F_hat = zeros(cellxmax,cellymax+1,4)
 
@@ -158,12 +184,26 @@ function FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,Q
     return E_hat,F_hat
 end
 
-function setup_RHS(cellxmax,cellymax,E_hat,F_hat)
-    RHS=zeros(cellxmax,cellymax,4)
+function setup_RHS(cellxmax,cellymax,E_hat,F_hat,Qcon_hat)
+    RHS = zeros(cellxmax,cellymax,4)
+    
     Threads.@threads for i in 2:cellxmax-1
         for j in 2:cellymax-1
             for k in 1:4
                 RHS[i,j,k] = -(E_hat[i+1,j,k]-E_hat[i,j,k]+F_hat[i,j+1,k]-F_hat[i,j,k])
+            end
+        end
+    end
+    return RHS
+end
+
+function set_RHS_inner(cellxmax,cellymax,dt,Qcon_hat_n,Qcon_hat_m1,E_hat,F_hat)
+    RHS = zeros(cellxmax,cellymax,4)
+    
+    Threads.@threads for i in 2:cellxmax-1
+        for j in 2:cellymax-1
+            for k in 1:4
+                RHS[i,j,k] = -(Qcon_hat_m1[i,j,k]-Qcon_hat_n[i,j,k]) -dt*(E_hat[i+1,j,k]-E_hat[i,j,k]+F_hat[i,j+1,k]-F_hat[i,j,k])
             end
         end
     end

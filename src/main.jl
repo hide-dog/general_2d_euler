@@ -8,6 +8,9 @@ function main()
 
     Qbase,cellxmax,cellymax,restartnum = set_initQbase(xmax,ymax,restart_file,init_rho,init_u,init_v,init_p,specific_heat_ratio,out_file_front,out_ext,out_dir,restartnum)
 
+    # init Delta_Qcon_hat
+    Delta_Qcon_hat = zeros(cellxmax,cellymax,4)
+    
     # main loop
     println("threads num ")
     println(Threads.nthreads())
@@ -25,33 +28,13 @@ function main()
 
         #println(Qbase[:,1,2])
         #println(Qbase[:,1,3])
+        
+        cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus = cal_jacobi(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
+        cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qcon,cellxmax,cellymax,cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus)
 
-        cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
-
-        E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
+        E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,cellxmax,cellymax)
         
-        RHS = setup_RHS(cellxmax,cellymax,E_hat,F_hat)
-        
-        # implicit scheme
-        #= A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig = one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,volume)
-        nt_lusgs = Int(1.0*10^(5))
-        for i in 1:nt_lusgs
-            Qcon_hat,Lx,Ly,Ux,Uy = lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig,jalphaP, jbetaP,RHS,cellxmax,cellymax,volume)
-            res = set_res(Qcon_hat,Lx,Ly,Ux,Uy,RHS,cellxmax,cellymax)
-            norm2 = check_converge(res,RHS,cellxmax,cellymax)
-            if norm2 < norm_ok
-                break
-            end 
-            if i == nt_lusgs
-                println("\n ---------------------------------- \n")
-                println(" i == nt_lusgs ! \n")
-                println(" check lusgs")
-                println("\n ---------------------------------- \n")
-            end 
-            
-        end
-        =#
-        
+        RHS = setup_RHS(cellxmax,cellymax,E_hat,F_hat,Qcon_hat)
         evalnum = k+restartnum
 
         if time_integ == "1"
@@ -59,15 +42,88 @@ function main()
             Qcon_hat = time_integration_explicit(dt,Qcon_hat,RHS,cellxmax,cellymax)
         elseif time_integ == "2"
             # implicit scheme
-            A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig = one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,volume)
-            Qcon_hat,Lx,Ly,Ux,Uy = lusgs(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_shig, B_beta_shig,RHS,cellxmax,cellymax,volume)
-            res = set_res(Qcon_hat,Lx,Ly,Ux,Uy,RHS,cellxmax,cellymax)
-            norm2 = check_converge(res,RHS,cellxmax,cellymax,init_small)
-            println("\n ---------------------------------- \n")
-            println("nt : "*string(round(evalnum)))
-            println("density res:"*string(norm2[1]) * "  energy res:"*string(norm2[4]))
-            println("\n ---------------------------------- \n")
+            A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_sig, B_beta_sig = one_wave(Qbase,Qcon,cellxmax,cellymax,vecAx,vecAy,specific_heat_ratio,volume)
+            Lx,Ly,Ux,Uy,D = set_LDU(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_sig, B_beta_sig,RHS,cellxmax,cellymax,volume)
 
+            Delta_Qcon_hat_temp = zeros(cellxmax,cellymax,4)
+            for lusgs_t in 1:nt_lusgs
+                Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
+                
+                res = set_res(Delta_Qcon_hat,Delta_Qcon_hat_temp,cellxmax,cellymax)
+                norm2 = check_converge(res,RHS,cellxmax,cellymax,init_small)
+                
+                Delta_Qcon_hat_temp = copy(Delta_Qcon_hat)
+                
+                if norm2[1] < norm_ok && norm2[4] < norm_ok
+                    println("\n ---------------------------------- \n")
+                    println("nt : "*string(round(evalnum)))
+                    println("density res:"*string(norm2[1]) * "  energy res:"*string(norm2[4]))
+                    println("\n ---------------------------------- \n")
+                    break
+                end 
+                
+            end
+
+            # lusgs = update
+            for i in 2:cellxmax-1
+                for j in 2:cellymax-1
+                    for l in 1:4
+                        Qcon_hat[i,j,l] = Qcon_hat[i,j,l] + Delta_Qcon_hat[i,j,l]
+                    end
+                end
+            end
+
+            # 内部反復
+            #=
+            nt_inner = 10
+            Qcon_hat_n = copy(Qcon_hat)
+            Qcon_hat_m1 = copy(Qcon_hat)
+            Delta_Qcon_hat_m = copy(Delta_Qcon_hat)
+
+            for inner_t in 1:nt_inner
+                Delta_Qcon_hat_temp = zeros(cellxmax,cellymax,4)
+
+                for lusgs_t in 1:nt_lusgs
+                    Qcon_m1 = Qhat_to_Q(Qcon_hat_m1,cellxmax,cellymax,volume)
+                    Qbase_m1 = conservative_to_base(Qcon_m1,cellxmax,cellymax,specific_heat_ratio)
+
+                    cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus = cal_jacobi(Qbase_m1,Qcon_m1,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
+                    cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qcon_m1,cellxmax,cellymax,cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus)
+                    E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,cellxmax,cellymax)
+                    
+                    # lusgsと違うので注意
+                    RHS = set_RHS_inner(cellxmax,cellymax,dt,Qcon_hat_n,Qcon_hat_m1,E_hat,F_hat)
+                    Lx,Ly,Ux,Uy,Dinv = set_LDU_inner(dt,cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus,cellxmax,cellymax,volume)
+
+                    Delta_Qcon_hat_m = inner_iteration(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,Dinv,Delta_Qcon_hat_m)
+
+
+                    res = set_res(Delta_Qcon_hat,Delta_Qcon_hat_temp,cellxmax,cellymax)
+                    norm2 = check_converge(res,RHS,cellxmax,cellymax,init_small)
+                    Delta_Qcon_hat_temp = copy(Delta_Qcon_hat_m)
+
+                    if norm2[1] < norm_ok && norm2[4] < norm_ok
+                        println("\n ---------------------------------- \n")
+                        println("nt : "*string(round(inner_t)))
+                        println("density res:"*string(norm2[1]) * "  energy res:"*string(norm2[4]))
+                        println("\n ---------------------------------- \n")
+                        break
+                    end
+                end
+
+                # inner update
+                for i in 2:cellxmax-1
+                    for j in 2:cellymax-1
+                        for l in 1:4
+                            Qcon_hat_m1[i,j,l] = Qcon_hat_m1[i,j,l] + Delta_Qcon_hat_m[i,j,l]
+                        end
+                    end
+                end
+            end
+
+            Qcon_hat = copy(Qcon_hat_m1)
+            =#
+        
             #println(Qcon_hat[:,:,1])
         else
             println(time_integ)

@@ -1,20 +1,16 @@
-function set_res(Qcon_hat,Lx,Ly,Ux,Uy,RHS,cellxmax,cellymax)
+function set_res(Delta_Qcon_hat,Delta_Qcon_hat_temp,cellxmax,cellymax)
     res = zeros(cellxmax, cellymax,4)
     
     for i in 2:cellxmax-1
         for j in 2:cellymax-1
-            Ax_star = zeros(4)
-                for l in 1:4
-                    for m in 1:4
-                        Ax_star[l] = Ax_star[l] + Lx[i-1,j,l,m]*Qcon_hat[i-1,j,m]
-                                    + Ly[i,j-1,l,m]*Qcon_hat[i,j-1,m]
-                                    + Ux[i+1,j,l,m]*Qcon_hat[i+1,j,m]
-                                    + Uy[i,j+1,l,m]*Qcon_hat[i,j+1,m]
-                    end
-                    res[i,j,l] = Ax_star[l] - RHS[i,j,l]
-                end
+            for l in 1:4
+                res[i,j,l] = abs(Delta_Qcon_hat[i,j,l]-Delta_Qcon_hat_temp[i,j,l])
+            end
         end
     end 
+
+    # println(res[3,3,:])
+    # println(dt*RHS[3,3,:])
     return res
 end
 
