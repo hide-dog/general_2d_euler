@@ -170,7 +170,7 @@ function lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
             end
 
             for l in 1:4
-                Delta_Qcon_hat[i,j,l] = D[i,j]^(-1) * (LdQ[l]+RHS[i,j,l])
+                Delta_Qcon_hat[i,j,l] = D[i,j]^(-1) * (-LdQ[l]+RHS[i,j,l])
             end
         end
     end

@@ -29,16 +29,9 @@ function main()
         cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus = cal_jacobi(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
         cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qcon,cellxmax,cellymax,cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus)
 
-        println(cell_F_hat_plas[2,2,:])
-        println(cell_F_hat_minus[2,2,:])
-
-
         E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,cellxmax,cellymax)
         
         RHS = setup_RHS(cellxmax,cellymax,E_hat,F_hat,Qcon_hat)
-        
-        println(E_hat[2,2,:])
-        println(F_hat[2,2,:])
 
         evalnum = k+restartnum
         if time_integ == "1"
@@ -50,13 +43,19 @@ function main()
             Lx,Ly,Ux,Uy,D = set_LDU(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_sig, B_beta_sig,RHS,cellxmax,cellymax,volume)
 
             Delta_Qcon_hat_temp = zeros(cellxmax,cellymax,4)
+
             for lusgs_t in 1:nt_lusgs
-                Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
-                
+                nt_temp = 10
+                norm2 = 0.0
+
+                # println(Delta_Qcon_hat[3,3,:])
+                Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)                    
                 res = set_res(Delta_Qcon_hat,Delta_Qcon_hat_temp,cellxmax,cellymax)
                 norm2 = check_converge(res,RHS,cellxmax,cellymax,init_small)
-                
                 Delta_Qcon_hat_temp = copy(Delta_Qcon_hat)
+                println(Delta_Qcon_hat[3,3,:])
+                #println(norm2)
+                
                 
                 if norm2[1] < norm_ok && norm2[4] < norm_ok
                     println("\n ---------------------------------- \n")
@@ -76,6 +75,8 @@ function main()
                     end
                 end
             end
+
+            
 
             # 内部反復
             #=
