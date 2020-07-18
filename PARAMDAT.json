@@ -6,18 +6,19 @@
 
 # -- restart --
 "Restart":"test",         # 前半のファイル名
-"restartnum":"999",     # 後半のファイル名（result/[Restart+restartnum+in_ext]で検索）
+"restartnum":"05777000",     # 後半のファイル名（result/[Restart+restartnum+in_ext]で検索）
 "in_ext":".dat",
 
 # -- output --
-"every_outnum":"10000",      # 出力毎タイムステップ
-"init_small":"1.0e-6",     # 初期発散抑え用(陽解法なのでいらない)
-"norm_ok":"1.0e-4",     # 収束条件(陽解法なのでいらない)
-"norm_check_num":"100", # 収束条件(陽解法なのでいらない)
+"init_small":"1.0e-50",       # 初期発散抑え用(陽解法ならいらない)
+"norm_ok":"1.0e-4",          # 収束条件(陽解法ならいらない)
+"nt_lusgs":"1.0e5",
 
 # -- time step --
-"nt":"1.0e5",          # 時間ステップ数
-"dt":"1.0e-7",       # 時間刻み幅[s]
+"time_integ":"1",      # 1 = explicit, 2 = lusgs
+"nt":"100",          # 時間ステップ数
+"dt":"1.0e-5",       # 時間刻み幅[s]
+"every_outnum":"10",      # 出力毎タイムステップ
 
 # -- 初期値 --
 "init_rho":"6.0e-5",     # 初期密度[kg/m^3]

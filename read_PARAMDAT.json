@@ -6,18 +6,19 @@
 
 
 "Restart":"test",         
-"restartnum":"999",     
+"restartnum":"05777000",     
 "in_ext":".dat",
 
 
-"every_outnum":"10000",      
-"init_small":"1.0e-6",     
-"norm_ok":"1.0e-4",     
-"norm_check_num":"100", 
+"init_small":"1.0e-50",       
+"norm_ok":"1.0e-4",          
+"nt_lusgs":"1.0e5",
 
 
-"nt":"1.0e5",          
-"dt":"1.0e-7",       
+"time_integ":"1",      
+"nt":"100",          
+"dt":"1.0e-5",       
+"every_outnum":"10",      
 
 
 "init_rho":"6.0e-5",     
@@ -26,6 +27,8 @@
 "init_p":"0.349",       
 
 "specific_heat_ratio":"1.4", 
+
+
 
 
 
