@@ -26,20 +26,17 @@ function main()
 
         Qcon_hat = setup_Qcon_hat(Qcon,cellxmax,cellymax,volume)
 
-        #println(Qbase[:,1,2])
-        #println(Qbase[:,1,3])
-        
         cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus = cal_jacobi(Qbase,Qcon,cellxmax,cellymax,specific_heat_ratio,vecAx,vecAy)
         cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus = setup_cell_flux_hat(Qcon,cellxmax,cellymax,cell_Ahat_plas,cell_Ahat_minus,cell_Bhat_plas,cell_Bhat_minus)
-
-        println(cell_E_hat_plas[2,2,:])
-        println(cell_E_hat_minus[2,2,:])
 
         E_hat,F_hat = FVS(cell_E_hat_plas,cell_E_hat_minus,cell_F_hat_plas,cell_F_hat_minus,cellxmax,cellymax)
         
         RHS = setup_RHS(cellxmax,cellymax,E_hat,F_hat,Qcon_hat)
-        evalnum = k+restartnum
+        
+        println(E_hat[2,2,:])
+        println(F_hat[2,2,:])
 
+        evalnum = k+restartnum
         if time_integ == "1"
             # exlicit scheme
             Qcon_hat = time_integration_explicit(dt,Qcon_hat,RHS,cellxmax,cellymax)
