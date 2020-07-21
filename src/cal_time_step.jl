@@ -135,10 +135,19 @@ function set_LDU(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m,
         end
     end
 
+    #println(Lx[2,2,:,:])
+    #println(Ux[2,2,:,:])
+
     return Lx,Ly,Ux,Uy,D
 end
 
 function lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
+
+    temp1 = zeros(4)
+    temp2 = zeros(4)
+    temp3 = zeros(4)
+
+    
     #=
     println("\n ---------------------------------- \n")
     println(" Lx ")
@@ -150,11 +159,14 @@ function lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
     for i in 1:4
         I[i,i] = 1.0
     end
-
+    
+    test = zeros(cellxmax,cellymax,4)
+    RHS_temp = zeros(cellxmax,cellymax,4)
     for i in 1:cellxmax
         for j in 1:cellymax
             for k in 1:4
-                RHS[i,j,k] = dt*RHS[i,j,k]
+                RHS_temp[i,j,k] = dt*RHS[i,j,k]
+                test[i,j,k] = Delta_Qcon_hat[i,j,k]
             end
         end
     end   
@@ -165,16 +177,22 @@ function lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
         for j in 2:cellymax-1
             for l in 1:4
                 for m in 1:4
-                    LdQ[l] = Lx[i-1,j,l,m]*Delta_Qcon_hat[i-1,j,m] + Ly[i,j-1,l,m]*Delta_Qcon_hat[i,j-1,m]        
+                    LdQ[l] = Lx[i-1,j,l,m]*test[i-1,j,m] + Ly[i,j-1,l,m]*test[i,j-1,m]        
                 end
             end
 
             for l in 1:4
-                Delta_Qcon_hat[i,j,l] = D[i,j]^(-1) * (-LdQ[l]+RHS[i,j,l])
+                test[i,j,l] = D[i,j]^(-1) * (-LdQ[l]+RHS_temp[i,j,l])
+            end
+            if i==2 && j==2
+                println("LdQ")
+                println(LdQ)
+                temp1 = deepcopy(LdQ)
             end
         end
     end
-    #println(Delta_Qcon_hat)
+
+    #println(test[2,2,:])
 
     # upepr sweep
     UdQ = zeros(4)
@@ -182,17 +200,35 @@ function lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
         for j in 2:cellymax-1
             for l in 1:4
                 for m in 1:4
-                    UdQ[l] = Ux[i+1,j,l,m]*Delta_Qcon_hat[i+1,j,m] + Uy[i,j+1,l,m]*Delta_Qcon_hat[i,j+1,m]        
+                    UdQ[l] = Ux[i+1,j,l,m]*test[i+1,j,m] + Uy[i,j+1,l,m]*test[i,j+1,m]        
                 end
             end
 
             for l in 1:4
-                Delta_Qcon_hat[i,j,l] = Delta_Qcon_hat[i,j,l] - D[i,j]^(-1) * UdQ[l]
+                test[i,j,l] = test[i,j,l] - D[i,j]^(-1) * UdQ[l]
+            end
+            if i==2 && j==2
+                println("UdQ")
+                println(UdQ)
+                temp2 = deepcopy(UdQ) 
             end
         end
     end
 
-    return Delta_Qcon_hat
+    println(RHS_temp[2,2,:])
+    println(temp1)
+    println(temp2)
+
+    for l in 1:4
+        temp3[l] = D[2,2]^-1 * ((-temp1[l]+RHS_temp[2,2,l])-temp2[l])
+    end
+
+    println(temp3)
+    println(Delta_Qcon_hat[2,2,:])
+
+    #Delta_Qcon_hat = deepcopy(test)
+    #return Delta_Qcon_hat
+    return test
 end
 
 function set_LDU_inner(dt,cell_A_plas,cell_A_minus,cell_B_plas,cell_B_minus,cellxmax,cellymax,volume)

@@ -43,30 +43,45 @@ function main()
             Lx,Ly,Ux,Uy,D = set_LDU(dt,Qcon_hat,A_adv_hat_p, A_adv_hat_m, B_adv_hat_p, B_adv_hat_m, A_beta_sig, B_beta_sig,RHS,cellxmax,cellymax,volume)
 
             Delta_Qcon_hat_temp = zeros(cellxmax,cellymax,4)
-
+            
+            
             for lusgs_t in 1:nt_lusgs
-                nt_temp = 10
+                nt_temp = 100
                 norm2 = 0.0
 
-                # println(Delta_Qcon_hat[3,3,:])
-                Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)                    
-                res = set_res(Delta_Qcon_hat,Delta_Qcon_hat_temp,cellxmax,cellymax)
-                norm2 = check_converge(res,RHS,cellxmax,cellymax,init_small)
-                Delta_Qcon_hat_temp = copy(Delta_Qcon_hat)
-                println(Delta_Qcon_hat[3,3,:])
-                #println(norm2)
-                
+                for i in 1:nt_temp
+                    #println(Delta_Qcon_hat[2,2,:])
+                    Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)                    
+                    #println(Delta_Qcon_hat[2,2,:])
+
+                    res = set_res(Delta_Qcon_hat,Delta_Qcon_hat_temp,cellxmax,cellymax)
+                    norm2 = check_converge(res,RHS,cellxmax,cellymax,init_small)
+
+                    Delta_Qcon_hat_temp = deepcopy(Delta_Qcon_hat)
+                    
+                    
+                    
+                    #throw(UndefVarError(:x))
+
+                    #println(norm2)
+                    #println(Delta_Qcon_hat[2,2,:])
+                    #println(dt*RHS[2,2,:])
+                    println("\n ---------------------------------- \n")
+                end
+                    
                 
                 if norm2[1] < norm_ok && norm2[4] < norm_ok
                     println("\n ---------------------------------- \n")
-                    println("nt : "*string(round(evalnum)))
+                    println("nt : "*string(round(evalnum))*"     lusgs_t : "*string(lusgs_t))
                     println("density res:"*string(norm2[1]) * "  energy res:"*string(norm2[4]))
                     println("\n ---------------------------------- \n")
                     break
                 end 
                 
             end
-
+            #Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)
+            #Delta_Qcon_hat = lusgs(dt,RHS,cellxmax,cellymax,volume,Lx,Ly,Ux,Uy,D,Delta_Qcon_hat)                    
+            
             # lusgs = update
             for i in 2:cellxmax-1
                 for j in 2:cellymax-1
@@ -75,6 +90,9 @@ function main()
                     end
                 end
             end
+
+            
+            #println(dt*RHS[2,2,:])
 
             
 
